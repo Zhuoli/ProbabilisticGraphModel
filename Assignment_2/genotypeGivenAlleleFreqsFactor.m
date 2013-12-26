@@ -26,6 +26,10 @@ function genotypeFactor = genotypeGivenAlleleFreqsFactor(alleleFreqs, genotypeVa
 
 genotypeFactor = struct('var', [], 'card', [], 'val', []);
 numAlleles = length(alleleFreqs);
+genotypeFactor.var=[genotypeVar];
+genotypes = numAlleles*(numAlleles-1)/2 + numAlleles;
+genotypeFactor.card=[genotypes];
+genotypeFactor.val=zeros(1,prod(genotypeFactor.card));
 
 % Each allele has an ID that is the index of its allele frequency in the 
 % allele frequency list.  Each genotype also has an ID.  We need allele and
@@ -39,6 +43,15 @@ numAlleles = length(alleleFreqs);
 % consists of 2 alleles.)
 
 [allelesToGenotypes, genotypesToAlleles] = generateAlleleGenotypeMappers(numAlleles);
+for index = 1:prod(genotypeFactor.card),
+    alleles=genotypesToAlleles(index,:);
+    frq=alleleFreqs(alleles(1))*alleleFreqs(alleles(2));
+    if alleles(1)~=alleles(2),
+        frq = frq*2;
+    end
+    assignment=IndexToAssignment(index,genotypeFactor.card);
+    genotypeFactor=SetValueOfAssignment(genotypeFactor,assignment,frq);
+end
 
 % One or both of these matrices might be useful.
 %
@@ -59,7 +72,6 @@ numAlleles = length(alleleFreqs);
 % Fill in genotypeFactor.var.  This should be a 1-D row vector.
 % Fill in genotypeFactor.card.  This should be a 1-D row vector.
 
-genotypeFactor.val = zeros(1, prod(genotypeFactor.card));
 % Replace the zeros in genotypeFactor.val with the correct values.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  

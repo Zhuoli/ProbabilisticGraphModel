@@ -27,7 +27,19 @@ function phenotypeFactor = phenotypeGivenGenotypeFactor(alphaList, genotypeVar, 
 %   FULL CPD with no evidence observed)
 
 phenotypeFactor = struct('var', [], 'card', [], 'val', []);
-
+n= length(alphaList);
+delt=sqrt(1+8*n);
+card = (-1+delt)/2;
+phenotypeFactor.var=[phenotypeVar genotypeVar];
+phenotypeFactor.card=[2 n];
+phenotypeFactor.val=zeros(1,prod(phenotypeFactor.card));
+indxs = 1:prod(phenotypeFactor.card);
+for i = 1:length(indxs)/2,
+    assignment=IndexToAssignment(i*2-1,phenotypeFactor.card);
+    phenotypeFactor=SetValueOfAssignment(phenotypeFactor,assignment,alphaList(i));
+    assignment=IndexToAssignment(i*2,phenotypeFactor.card);
+    phenotypeFactor=SetValueOfAssignment(phenotypeFactor,assignment,1-alphaList(i));
+end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %INSERT YOUR CODE HERE
 % The number of genotypes is the length of alphaList.
@@ -36,8 +48,6 @@ phenotypeFactor = struct('var', [], 'card', [], 'val', []);
 
 % Fill in phenotypeFactor.var.  This should be a 1-D row vector.
 % Fill in phenotypeFactor.card.  This should be a 1-D row vector.
-
-phenotypeFactor.val = zeros(1, prod(phenotypeFactor.card));
 % Replace the zeros in phentoypeFactor.val with the correct values.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
