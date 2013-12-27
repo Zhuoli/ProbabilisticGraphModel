@@ -26,7 +26,10 @@ function genotypeFactor = genotypeGivenParentsGenotypesFactor(numAlleles, genoty
 % alleles -- need to add number of alleles at the end to account for homozygotes
 
 genotypeFactor = struct('var', [], 'card', [], 'val', []);
-
+card = numAlleles*(numAlleles-1)/2 + numAlleles;
+genotypeFactor.card=[card card card];
+genotypeFactor.var=[genotypeVarChild, genotypeVarParentOne, genotypeVarParentTwo];
+genotypeFactor.val = zeros(1, prod(genotypeFactor.card));
 % Each allele has an ID.  Each genotype also has an ID.  We need allele and
 % genotype IDs so that we know what genotype and alleles correspond to each
 % probability in the .val part of the factor.  For example, the first entry
@@ -39,7 +42,30 @@ genotypeFactor = struct('var', [], 'card', [], 'val', []);
 % 2 alleles.)
 
 [allelesToGenotypes, genotypesToAlleles] = generateAlleleGenotypeMappers(numAlleles);
-
+for i =1:prod(genotypeFactor.card)/3,
+    assignment = IndexToAssignment(i*3,genotypeFactor.card);
+    parentAPhanotype=assignment(2);
+    parentBPhanotype=assignment(3);
+    parentAalleles=genotypesToAlleles(parentAPhanotype,:);
+    parentBalleles=genotypesToAlleles(parentBPhanotype,:);
+    style1=allelesToGenotypes(parentAalleles(1),parentBalleles(1));
+    style2=allelesToGenotypes(parentAalleles(1),parentBalleles(2));
+    style3=allelesToGenotypes(parentAalleles(2),parentBalleles(1));
+    style4=allelesToGenotypes(parentAalleles(2),parentBalleles(2));
+    ix=zeros(1,4);
+    ix(1) = AssignmentToIndex([style1,parentAPhanotype,parentBPhanotype],genotypeFactor.card);
+    ix(2) = AssignmentToIndex([style2,parentAPhanotype,parentBPhanotype],genotypeFactor.card);
+    ix(3) = AssignmentToIndex([style3,parentAPhanotype,parentBPhanotype],genotypeFactor.card);
+    ix(4) = AssignmentToIndex([style4,parentAPhanotype,parentBPhanotype],genotypeFactor.card);
+    %s=union(ix,ix)
+    %vals=zeros(length(s),2);
+    for i = ix,
+        assignment = IndexToAssignment(i,genotypeFactor.card);
+        val = 1+GetValueOfAssignment(genotypeFactor,assignment);
+        genotypeFactor=SetValueOfAssignment(genotypeFactor,assignment,val);
+    end
+end
+genotypeFactor.val=genotypeFactor.val/4;
 % One or both of these matrices might be useful.
 %
 %   1.  allelesToGenotypes: n x n matrix that maps pairs of allele IDs to 
@@ -59,7 +85,7 @@ genotypeFactor = struct('var', [], 'card', [], 'val', []);
 % Fill in genotypeFactor.var.  This should be a 1-D row vector.
 % Fill in genotypeFactor.card.  This should be a 1-D row vector.
 
-genotypeFactor.val = zeros(1, prod(genotypeFactor.card));
+
 % Replace the zeros in genotypeFactor.val with the correct values.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
